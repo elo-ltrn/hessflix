@@ -13,7 +13,7 @@ Les conteneurs que nous allons configurer sont utilisés pour des services spéc
 - **Prowlarr** : Un indexeur pour gérer les moteurs de recherche de médias et s'intégrer avec Radarr, Sonarr, et Lidarr.
 - **Radarr** : Un gestionnaire de films automatique, similaire à Sonarr, mais pour les films.
 - **Sonarr** : Un gestionnaire de séries TV, similaire à Radarr.
-## I - **Méthode ligne de commande (Step-by-step)**
+## 🅰️ - **Méthode ligne de commande (Step-by-step)**
 
 ### 1. **Installation de Podman sur macOS**
 
@@ -194,7 +194,11 @@ chmod +x stop_all.sh
 
 Cela vous permet de gérer facilement l'ensemble de vos services multimédia en conteneurs !
 
-## II - **Méthode Podman-Compose (Fast)**
+---
+---
+---
+
+## 🅱️ - **Méthode Podman-Compose (Fast)**
 
 Voici une version mise à jour du tutoriel avec une précision sur le bon répertoire à utiliser.  
 
