@@ -194,7 +194,7 @@ chmod +x stop_all.sh
 
 Cela vous permet de gérer facilement l'ensemble de vos services multimédia en conteneurs !
 
-## II - **Méthode Podman-Compose (Fast)
+## II - **Méthode Podman-Compose (Fast)**
 
 Voici une version mise à jour du tutoriel avec une précision sur le bon répertoire à utiliser.  
 
