@@ -1,6 +1,6 @@
 # hesflix
 
-### Préambule
+## Préambule
 
 **Podman** est un outil de gestion de conteneurs qui fonctionne sans nécessiter un démon central, contrairement à Docker. Il permet de créer, gérer et exécuter des conteneurs et des pods. Un **pod** est un groupe de conteneurs qui partagent le même réseau et peuvent communiquer entre eux de manière transparente. Chaque conteneur dans un pod peut avoir des volumes de stockage et des configurations propres, tout en étant lié aux autres conteneurs du pod.
 
@@ -13,6 +13,7 @@ Les conteneurs que nous allons configurer sont utilisés pour des services spéc
 - **Prowlarr** : Un indexeur pour gérer les moteurs de recherche de médias et s'intégrer avec Radarr, Sonarr, et Lidarr.
 - **Radarr** : Un gestionnaire de films automatique, similaire à Sonarr, mais pour les films.
 - **Sonarr** : Un gestionnaire de séries TV, similaire à Radarr.
+## I - **Méthode ligne de commande (Step-by-step)**
 
 ### 1. **Installation de Podman sur macOS**
 
@@ -192,3 +193,195 @@ chmod +x stop_all.sh
 - Un script `start_all.sh` et `stop_all.sh` permet de démarrer et d'arrêter tous les pods en une seule commande.
 
 Cela vous permet de gérer facilement l'ensemble de vos services multimédia en conteneurs !
+
+## II - **Méthode Podman-Compose (Fast)
+
+Voici une version mise à jour du tutoriel avec une précision sur le bon répertoire à utiliser.  
+
+---
+
+### 1️⃣ **Installation de Podman et Podman Compose sur macOS**  
+Sur macOS, **Podman** fonctionne via une machine virtuelle. Commençons par l’installer avec **Homebrew**.
+
+#### ➜ **Installer Homebrew** (si ce n'est pas déjà fait)  
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+#### ➜ **Installer Podman et Podman Compose**  
+```bash
+brew install podman podman-compose
+```
+
+#### ➜ **Configurer la machine virtuelle Podman**  
+```bash
+podman machine init
+podman machine start
+```
+
+---
+
+### 2️⃣ **Créer le Fichier `podman-compose.yml`**
+Dans un dossier dédié (`~/Documents/HesFlix`), crée un fichier nommé `podman-compose.yml` et copie-colle ceci :
+
+```yaml
+version: '3.8'
+
+services:
+  jellyfin:
+    image: docker.io/jellyfin/jellyfin:latest
+    container_name: jellyfin
+    restart: always
+    ports:
+      - "8096:8096"
+    volumes:
+      - ~/Documents/HesFlix/jellyfin/config:/config
+      - ~/Documents/HesFlix/jellyfin/cache:/cache
+      - ~/Documents/HesFlix/jellyfin/media:/media
+
+  jellyseerr:
+    image: docker.io/fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    restart: always
+    ports:
+      - "5055:5055"
+    volumes:
+      - ~/Documents/HesFlix/jellyseerr/config:/config
+      - ~/Documents/HesFlix/jellyseerr/downloads:/downloads
+
+  qbittorrent:
+    image: docker.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - ~/Documents/HesFlix/qbittorrent/config:/config
+      - ~/Documents/HesFlix/qbittorrent/downloads:/downloads
+
+  prowlarr:
+    image: docker.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    restart: always
+    ports:
+      - "9696:9696"
+    volumes:
+      - ~/Documents/HesFlix/prowlarr/config:/config
+      - ~/Documents/HesFlix/prowlarr/downloads:/downloads
+
+  radarr:
+    image: docker.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: always
+    ports:
+      - "7878:7878"
+    volumes:
+      - ~/Documents/HesFlix/radarr/config:/config
+      - ~/Documents/HesFlix/radarr/movies:/movies
+      - ~/Documents/HesFlix/prowlarr/downloads:/downloads
+
+  sonarr:
+    image: docker.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: always
+    ports:
+      - "8989:8989"
+    volumes:
+      - ~/Documents/HesFlix/sonarr/config:/config
+      - ~/Documents/HesFlix/sonarr/tv:/tv
+      - ~/Documents/HesFlix/prowlarr/downloads:/downloads
+```
+
+---
+
+### 3️⃣ **Démarrer les Services**
+#### 📍 **Se placer dans le bon répertoire**
+Avant de lancer les services, assure-toi d’être dans le bon dossier :
+```bash
+cd ~/Documents/HesFlix
+```
+
+#### 🚀 **Lancer tous les services**
+```bash
+podman-compose up -d
+```
+
+- **L'option `-d` permet d’exécuter les conteneurs en arrière-plan**.
+- **Vérifier que tout fonctionne** avec :
+  ```bash
+  podman ps
+  ```
+
+---
+
+### 4️⃣ **Gérer les Services**
+#### 🔴 **Arrêter tous les services**  
+```bash
+podman-compose down
+```
+
+#### 🟢 **Redémarrer tous les services**  
+```bash
+podman-compose up -d
+```
+
+---
+
+### 5️⃣ **Automatisation avec des Scripts**
+Crée deux scripts pour simplifier le démarrage et l’arrêt des services.
+
+📌 **Script `start_all.sh` :**
+```bash
+#!/bin/bash
+cd ~/Documents/HesFlix
+podman-compose up -d
+echo "Tous les services sont démarrés."
+```
+
+📌 **Script `stop_all.sh` :**
+```bash
+#!/bin/bash
+cd ~/Documents/HesFlix
+podman-compose down
+echo "Tous les services sont arrêtés."
+```
+
+#### ➜ **Rendre les scripts exécutables**
+```bash
+chmod +x start_all.sh stop_all.sh
+```
+
+#### ➜ **Exécuter les scripts**
+- Démarrer tous les services :  
+  ```bash
+  ./start_all.sh
+  ```
+- Arrêter tous les services :  
+  ```bash
+  ./stop_all.sh
+  ```
+
+---
+
+### 🎯 **Résumé**
+✅ **Installation** de Podman et Podman Compose  
+✅ **Création du fichier `podman-compose.yml`** pour simplifier la configuration  
+✅ **Démarrage des services** avec `podman-compose up -d`  
+✅ **Gestion facile** des services avec `start_all.sh` et `stop_all.sh`  
+
+---
+
+#### 🌍 **Accès aux interfaces web**
+| Service    | URL Web                      |
+|------------|------------------------------|
+| Jellyfin   | `http://localhost:8096`      |
+| Jellyseerr | `http://localhost:5055`      |
+| qBittorrent | `http://localhost:8080`     |
+| Prowlarr   | `http://localhost:9696`      |
+| Radarr     | `http://localhost:7878`      |
+| Sonarr     | `http://localhost:8989`      |
+
+---
+
+🚀 **Avec cette configuration, ton serveur multimédia est opérationnel en quelques commandes !**  
+Dis-moi si tu veux d'autres ajustements. 😊
